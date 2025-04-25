@@ -90,6 +90,27 @@ def make_gaussian_log_likelihood_fixed_noise(temperature, noise):
 
   return gaussian_log_likelihood
 
+def get_best_hyperparameters(train_x, train_y, llh_fn):
+    """Performs grid search to find the best prior_var and noise_var."""
+    best_prior_var = None
+    best_noise_var = None
+    best_likelihood = -float('inf')
+    
+    # Define the grid for prior_var and noise_var
+    prior_var_grid = [0.1, 1.0, 10.0]
+    noise_var_grid = [0.01, 0.1, 1.0]
+    
+    for prior_var in prior_var_grid:
+        for noise_var in noise_var_grid:
+            noise_var_tensor = torch.tensor(noise_var, dtype=train_x.dtype, device=train_x.device)
+            likelihood = llh_fn(train_x, train_y, prior_var, noise_var_tensor)
+            if likelihood > best_likelihood:
+                best_prior_var = prior_var
+                best_noise_var = noise_var
+                best_likelihood = likelihood
+    
+    return best_prior_var, torch.tensor(best_noise_var, dtype=train_x.dtype, device=train_x.device)
+
 
 class RegNet(torch.nn.Sequential):
     def __init__(self, dimensions, activation, input_dim=1, output_dim=1,
