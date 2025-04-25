@@ -24,6 +24,8 @@ from test_functions import (BnnDraw, KnowledgeDistillation, LunarLanderProblem,
                             OilSorbent, Optics, PDEVar, PestControl, PolyDraw,
                             cco)
 
+from test_functions.Discrete_Problem import DiscreteBranin, DiscretePestControl
+
 
 def round(test_function_name, x):
     if test_function_name == "oil":
@@ -62,6 +64,7 @@ def bayes_opt(model, test_function, args, init_x, init_y, model_save_dir, device
         # fit model on normalized x
         model_start = time.time()
         normalized_x = normalize(train_x, bounds).to(train_x)
+
         model.fit_and_save(normalized_x, train_y, model_save_dir)
         model_end = time.time()
         print("fit time", model_end - model_start)
@@ -203,6 +206,18 @@ def get_test_function(test_function, seed):
         return Ackley(dim=dim, negate=True)
     elif test_function == "branin":
         return Branin(negate=True)
+    elif "discrete_branin" in test_function:
+        if test_function == "discrete_branin":
+            dim = 2
+        else:
+            dim = int(test_function.split('_')[-1])
+        return DiscreteBranin(dim=dim, negate=True)
+    elif "discrete_pest" in test_function:
+        if test_function == "discrete_pest":
+            dim = 25
+        else:
+            dim = int(test_function.split('_')[-1])
+        return DiscretePestControl(dim=dim, negate=True, seed=seed)
     elif test_function == "branincurrin":
         return BraninCurrin(negate=True)
     elif test_function == "hartmann":
@@ -329,7 +344,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="default")
     parser.add_argument("--bg", default=False, action="store_true")
-    parser.add_argument("-n", "--name", type=str, help="experiment name (optional)")
+    #parser.add_argument("-n", "--name", type=str, help="experiment name (optional)")
+    parser.add_argument("-n", "--name", type=str, default="discrete_test", help="experiment name")
     cl_args = parser.parse_args()
 
     main(cl_args)
