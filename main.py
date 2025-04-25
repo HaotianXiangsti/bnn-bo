@@ -274,7 +274,7 @@ def main(cl_args):
         # save config
         with open(save_dir + '/config.json', 'w') as f:
             json.dump(args, f, indent=2)
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device = torch.device('cpu')#('cuda' if torch.cuda.is_available() else 'cpu')
         torch.set_default_dtype(torch.float64)
         torch.manual_seed(int(args["seed"]))
 
