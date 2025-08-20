@@ -25,6 +25,7 @@ from test_functions import (BnnDraw, KnowledgeDistillation, LunarLanderProblem,
                             cco)
 
 from test_functions.Discrete_Problem import DiscreteBranin, DiscretePestControl
+from test_functions.MaxSAT.maximum_satisfiability import DiscreteMaxSAT60
 
 
 def round(test_function_name, x):
@@ -34,8 +35,11 @@ def round(test_function_name, x):
         x[..., 15:] = torch.floor(x[..., 15:])
     elif test_function_name == "pest":
         x = torch.floor(x)
+    elif test_function_name == "maxsat60" or test_function_name == "discrete_maxsat60":
+        x = torch.round(x)  # 所有变量都是二进制的
     return x
 
+import wandb
 
 def bayes_opt(model, test_function, args, init_x, init_y, model_save_dir, device, model_name, test_function_name):
     q = int(args["batch_size"])
@@ -48,6 +52,9 @@ def bayes_opt(model, test_function, args, init_x, init_y, model_save_dir, device
     train_x = init_x
     train_y = init_y
 
+    #print("Initial points:", train_x)
+    print("Initial values:", train_y)
+
     if output_dim > 1:
         # compute hypervolume for each train_y
         train_volume = torch.zeros(len(train_y))
@@ -55,8 +62,12 @@ def bayes_opt(model, test_function, args, init_x, init_y, model_save_dir, device
             bd = DominatedPartitioning(ref_point=test_function.ref_point.to(train_x), Y=train_y[:i+1])
             volume = bd.compute_hypervolume().item()
             train_volume[i] = volume
-    
+    use_wandb =True
+    wandb_project = "LLMBO_Synthetic_60"
+    if use_wandb:
+            wandb.init(project=wandb_project, name=f"{model_name}-MAXSAT-60",)
     for i in range(args["n_BO_iters"]):
+
         sys.stdout.flush()
         sys.stderr.flush()
         print("\niteration %d" % i)
@@ -101,6 +112,9 @@ def bayes_opt(model, test_function, args, init_x, init_y, model_save_dir, device
             new_y = new_y.unsqueeze(-1)
         train_x = torch.cat([train_x, new_x])
         train_y = torch.cat([train_y, new_y])
+        best_y = -train_y.max().item()
+
+        wandb.log({"best_y": float(best_y), "iteration": i})
         
         if output_dim > 1:
             # compute hypervolume
@@ -120,12 +134,16 @@ def bayes_opt(model, test_function, args, init_x, init_y, model_save_dir, device
         if output_dim > 1:
             torch.save(train_volume.cpu(), "%s/volume.pt" % model_save_dir)
 
+    wandb.finish()
+
     if output_dim > 1:
         max_index = torch.argmax(train_volume)
         return train_x[max_index], train_volume[max_index]
     else:
         max_index = torch.argmax(train_y)
         return train_x[max_index], train_y[max_index]
+    
+    
 
 
 def initialize_model(model_name, model_args, input_dim, output_dim, device):
@@ -259,6 +277,10 @@ def get_test_function(test_function, seed):
     elif "poly" in test_function:
         dim = int(test_function.split('_')[1])
         return PolyDraw(dim, seed)
+    
+    elif test_function == "maxsat60" or test_function == "discrete_maxsat60":
+        return DiscreteMaxSAT60(negate=True, seed=seed)
+
     else:
         raise NotImplementedError(
             "Test function %s does not exist." % test_function)

@@ -1,0 +1,25 @@
+{
+    "dataset_name": "/home/haotian/haotianproject/bnn-bo/data_mo/redox_mer.csv",
+    "objective_names": ["Ered", "HOMO", "Gsol"],
+    "maximize": [false, false, false],
+    "acquisition_function": "qehvi",
+    "n_init_points": 20,
+    "n_BO_iters": 100,
+    "n_trials": 1,
+    "batch_size": 1,
+    "seed": 42,
+    "feature_type": "morgan",
+    "fp_radius": 2,
+    "fp_bits": 60,
+    "discretize": true,
+    "n_bins": 2,
+    "use_wandb": true,
+    "wandb_project": "Molecular_Multi_Optimization",
+    "data_dir": "./data",
+    "models": {
+        "gp": {
+            "model": "gp"
+        }
+        
+    }
+}

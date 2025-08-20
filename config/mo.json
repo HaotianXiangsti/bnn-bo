@@ -1,0 +1,40 @@
+{
+    "dataset_name": "/home/haotian/haotianproject/bnn-bo/data_mo/redox_mer.csv",
+    "property_name": "Ered",
+    "acquisition_function": "ucb",
+    "ucb_beta": 2.0,
+    "maximize": false,
+    "n_init_points": 20,
+    "n_BO_iters": 220,
+    "n_trials": 3,
+    "batch_size": 1,
+    "seed": 39,
+    "feature_type": "morgan",
+    "fp_bits": 60,
+    "discretize": true,
+    "n_bins": 2,
+  "wandb_project": "Molecular_ABL",
+    "models": {
+      "gp": {
+        "model": "gp"
+      },
+      "dkl": {
+        "model": "dkl",
+        "regnet_dims": [
+          128,
+          128,
+          128
+        ],
+        "regnet_activation": "tanh",
+        "pretrain_steps": 100,
+        "train_steps": 10
+      },
+      "ibnn": {
+        "model": "ibnn",
+        "var_b": 1.3,
+        "var_w": 10,
+        "depth": 3
+      }
+      
+    }
+  }
