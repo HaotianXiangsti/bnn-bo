@@ -124,7 +124,7 @@ class LaplaceBNN(Model):
         Returns:
             Tensor of size `(batch_shape, k)`
         """
-        mean_y, cov_y = bnn(test_x, joint=True)
+        mean_y, cov_y = bnn(test_x)#, joint=True)
 
         return mean_y, cov_y
     
@@ -157,7 +157,7 @@ class LaplaceBNN(Model):
             prior_precision=(1 / prior_var),
             subset_of_weights='all',
             hessian_structure='kron',
-            enable_backprop=True
+            #enable_backprop=True
         )
         bnn.fit(train_loader)
         bnn.optimize_prior_precision(n_steps=50)

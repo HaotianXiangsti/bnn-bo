@@ -195,3 +195,4 @@ class DiscretePestControl(DiscreteTestProblem):
             total_risk += np.mean(curr_pest_frac > U)
         
         return total_cost + total_risk
+    

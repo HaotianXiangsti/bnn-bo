@@ -1290,17 +1290,41 @@ def bayes_opt_molecular_multi(model, problem, args, init_x, init_y, model_save_d
     # 设置参考点（在转换后的空间中，全部都是最大化问题）
     ref_point = torch.zeros(output_dim, dtype=torch.float64, device=train_y.device)
     
-    for i, obj_name in enumerate(objective_names):
-        # 在转换后的空间中，所有目标都是最大化的
-        # 参考点应该在转换后的最小值之下
-        min_val = transformed_all_Y[:, i].min()
-        range_val = transformed_all_Y[:, i].max() - transformed_all_Y[:, i].min()
-        ref_point[i] = min_val - 0.1 * range_val
+    # for i, obj_name in enumerate(objective_names):
+    #     # 在转换后的空间中，所有目标都是最大化的
+    #     # 参考点应该在转换后的最小值之下
+    #     min_val = transformed_all_Y[:, i].min()
+    #     range_val = transformed_all_Y[:, i].max() - transformed_all_Y[:, i].min()
+    #     ref_point[i] = min_val - 0.1 * range_val
         
-        if args["maximize"][i]:
-            print(f"  {obj_name} (最大化): 转换后参考点={ref_point[i]:.4f} < 转换后最小值={min_val:.4f}")
-        else:
-            print(f"  {obj_name} (最小化): 转换后参考点={ref_point[i]:.4f} < 转换后最小值={min_val:.4f}")
+    #     if args["maximize"][i]:
+    #         print(f"  {obj_name} (最大化): 转换后参考点={ref_point[i]:.4f} < 转换后最小值={min_val:.4f}")
+    #     else:
+    #         print(f"  {obj_name} (最小化): 转换后参考点={ref_point[i]:.4f} < 转换后最小值={min_val:.4f}")
+
+    # print(f"\n最终参考点（转换后空间）: {ref_point}")
+
+    # 转换目标值为botorch格式（全部最大化）
+    transformed_all_Y = transform_objectives_for_botorch(all_Y, args["maximize"])
+    
+    # 设置参考点（使用与第二段代码相同的逻辑）
+    ref_point = torch.zeros(output_dim, dtype=torch.float64, device=train_y.device)
+    
+    for i, obj_name in enumerate(objective_names):
+        if args["maximize"][i]:  # 最大化目标
+            # 参考点 = 原始最小值 - 0.1 * |原始最小值|
+            original_min_val = all_Y[:, i].min()
+            ref_point_original = original_min_val - 0.1 * torch.abs(original_min_val)
+            # 转换到botorch空间（最大化目标保持不变）
+            ref_point[i] = ref_point_original
+            print(f"  {obj_name} (最大化): 原始参考点={ref_point_original:.4f}, 转换后参考点={ref_point[i]:.4f}")
+        else:  # 最小化目标
+            # 参考点 = 原始最大值 + 0.1 * |原始最大值|
+            original_max_val = all_Y[:, i].max()
+            ref_point_original = original_max_val + 0.1 * torch.abs(original_max_val)
+            # 转换到botorch空间（最小化目标取负数）
+            ref_point[i] = -ref_point_original
+            print(f"  {obj_name} (最小化): 原始参考点={ref_point_original:.4f}, 转换后参考点={ref_point[i]:.4f}")
 
     print(f"\n最终参考点（转换后空间）: {ref_point}")
     
@@ -1705,3 +1729,5 @@ if __name__ == "__main__":
     cl_args = parser.parse_args()
 
     main(cl_args)
+
+
