@@ -1,5 +1,13 @@
 # A Study of Bayesian Neural Network Surrogates for Bayesian Optimization
 
+## Script
+
+python main_bnn_mo_multi.py --config multi_mo
+
+## Pip
+
+botorch, rdkit 
+
 ## Installation
 Create a new conda environment:
 ````
